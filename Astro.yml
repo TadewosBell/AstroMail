@@ -1,5 +1,5 @@
 Name: AstroMail
-Description: This is an email viewing client using GO lang Wails framework. The objective is to create a good looking email client that neatly display emails(EMl ...) and can be used to send emails. 
+Description: This is an email viewing client using GO lang Wails framework. The objective is to create a good looking email client that neatly display emails(EMl ...) and can be used to send emails. The plan is to eventually make it possible to deploy your own email server cost effectively.
 Frameworks:
   - Wails
   - Vue
