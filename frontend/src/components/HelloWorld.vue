@@ -20,7 +20,7 @@ function greet() {
     <div id="result" class="result">{{ data.resultText }}</div>
     <div id="input" class="input-box">
       <input id="name" v-model="data.name" autocomplete="off" class="input" type="text"/>
-      <button class="btn" @click="greet">Greet</button>
+      <button class="btn" @click="greet">Greet Also adding some more commits to see how it turns out.</button>
     </div>
   </main>
 </template>
