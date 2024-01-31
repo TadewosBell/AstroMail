@@ -1,40 +1,51 @@
 <script setup>
-import { reactive } from 'vue'
+import { reactive , onMounted} from 'vue'
+import sidenavHeader from '../components/sidenav-header.vue';
+import topHeader from '../components/header.vue';
+import itemList from '../components/item-list.vue';
+import sidenav from '../components/sidenav.vue';
+import inbox from '../components/inbox.vue';
 import { Greet } from '../../wailsjs/go/main/App'
 
 const data = reactive({
-  email: null,
+  inbox: [],
+  folder: 'inbox',
 })
 
 function GetEmail() {
+  console.log("Here")
   Greet(data.name).then(result => {
-    console.log(result)
-    data.email = JSON.parse(result)
+    const  resultJson =JSON.parse(result);
+    resultJson.id = 0;
+    data.inbox.push(resultJson)
   })
+}
+
+onMounted(() => {
+  GetEmail()
+})
+
+
+function ItemSelected(index) {
+console.log(index)
+data.focused_item = index;
+
+}
+
+function ChangeFolder(folder) {
+  console.log(folder);
+  data.folder = folder;
 }
 
 </script>
 
 <template>
   <main class="parent">
-      <div class="div1"> </div>
-      <div class="div2">
-      <h2>Inbox</h2>  
-      <input class="search" placeholder="search" />
-      </div>
-      <div class="div3">
-        <ul class="items">
-          <li class="email" v-on:click="GetEmail">Email one</li>
-          <li class="email">Email two</li>
-        </ul>
-      </div>
-      <div class="div4">
-        <ul class="items">
-          <li class="folders">Inbox</li>
-          <li class="folders">compose</li>
-        </ul>  
-      </div>
-      <div class="div5">{{ data.email?.text }}</div>
+      <sidenav-header />
+      <top-header />
+      <item-list @item-selected="ItemSelected" :folder="data[data.folder]"  />
+      <sidenav @folder-selected="ChangeFolder" />
+      <inbox :email="data[data.folder][data.focused_item]" />
   </main>
 </template>
 
