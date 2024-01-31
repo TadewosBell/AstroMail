@@ -3,13 +3,13 @@ import { reactive } from 'vue'
 import { Greet } from '../../wailsjs/go/main/App'
 
 const data = reactive({
-  name: "",
-  resultText: "Please enter your name below 👇",
+  email: null,
 })
 
-function greet() {
+function GetEmail() {
   Greet(data.name).then(result => {
-    data.resultText = result
+    console.log(result)
+    data.email = JSON.parse(result)
   })
 }
 
@@ -17,58 +17,34 @@ function greet() {
 
 <template>
   <main class="parent">
-      <div class="div1">div1 </div>
+      <div class="div1"> </div>
       <div class="div2">
       <h2>Inbox</h2>  
+      <input class="search" placeholder="search" />
       </div>
       <div class="div3">
         <ul class="items">
-          <li>Hit the gym</li>
-          <li class="checked">Pay bills</li>
+          <li class="email" v-on:click="GetEmail">Email one</li>
+          <li class="email">Email two</li>
         </ul>
       </div>
-      <div class="div4">div4 </div>
-      <div class="div5">div5</div>
+      <div class="div4">
+        <ul class="items">
+          <li class="folders">Inbox</li>
+          <li class="folders">compose</li>
+        </ul>  
+      </div>
+      <div class="div5">{{ data.email?.text }}</div>
   </main>
 </template>
 
 <style scoped>
-.input-box .btn {
-  width: 60px;
-  height: 30px;
-  line-height: 30px;
-  border-radius: 3px;
-  border: none;
+
+.search {
+  padding: 12px 16px 12px 16px;
   margin: 0 0 0 20px;
-  padding: 0 8px;
-  cursor: pointer;
 }
 
-.input-box .btn:hover {
-  background-image: linear-gradient(to top, #cfd9df 0%, #e2ebf0 100%);
-  color: #333333;
-}
-
-.input-box .input {
-  border: none;
-  border-radius: 3px;
-  outline: none;
-  height: 30px;
-  line-height: 30px;
-  padding: 0 10px;
-  background-color: rgba(240, 240, 240, 1);
-  -webkit-font-smoothing: antialiased;
-}
-
-.input-box .input:hover {
-  border: none;
-  background-color: rgba(255, 255, 255, 1);
-}
-
-.input-box .input:focus {
-  border: none;
-  background-color: rgba(255, 255, 255, 1);
-}
 
 .parent {
   display: grid;
@@ -82,7 +58,6 @@ function greet() {
 
 .div1 {
   grid-area: 1 / 1 / 2 / 3;
-  background-color: red;
   overflow: hidden;
   background-color: #dfe3e3;
 }
@@ -107,7 +82,6 @@ function greet() {
 
 .div4 {
   grid-area: 2 / 1 / 13 / 3;
-  background-color: green;
   overflow: hidden;
   background-color: #dfe3e3;
 }
@@ -125,12 +99,12 @@ function greet() {
 }
 
 /* Style the list items */
-.items li {
+.email {
   cursor: pointer;
   position: relative;
   padding: 12px 8px 12px 40px;
   list-style-type: none;
-  background: #eee;
+  background: rgb(255, 255, 255);
   font-size: 18px;
   transition: 0.2s;
 
@@ -139,5 +113,17 @@ function greet() {
   -moz-user-select: none;
   -ms-user-select: none;
   user-select: none;
+  border-bottom: 2px solid rgba(5, 5, 5, 0.06);
+}
+
+.email:hover{
+  background: #dfe3e3;
+}
+
+.folders {
+  cursor: pointer;
+  position: relative;
+  padding: 05px 0px 5px 0px;
+  list-style-type: none;
 }
 </style>
