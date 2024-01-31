@@ -1,9 +1,8 @@
 <script setup>
-import HelloWorld from './components/HelloWorld.vue'</script>
+import Home from './pages/Home.vue'</script>
 
 <template>
-  <img id="logo" alt="Wails logo" src="./assets/images/logo-universal.png"/>
-  <HelloWorld/>
+  <Home/>
 </template>
 
 <style>
@@ -17,5 +16,12 @@ import HelloWorld from './components/HelloWorld.vue'</script>
   background-repeat: no-repeat;
   background-size: 100% 100%;
   background-origin: content-box;
+}
+
+body {
+color: black;
+font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto",
+"Oxygen", "Ubuntu", "Cantarell", "Fira Sans", "Droid Sans", "Helvetica Neue",
+sans-serif;
 }
 </style>
