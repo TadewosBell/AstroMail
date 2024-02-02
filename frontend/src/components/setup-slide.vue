@@ -33,6 +33,7 @@
 .div3 {
     grid-area: 1 / 2 / 2 / 10;
     background-color: #f2f6f6;
+    --wails-draggable:drag
 }
 
 .div4 {
