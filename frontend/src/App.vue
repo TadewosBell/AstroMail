@@ -1,8 +1,10 @@
 <script setup>
-import Home from './pages/Home.vue'</script>
+</script>
 
 <template>
-  <Home/>
+  <div>
+    <router-view />
+  </div>
 </template>
 
 <style>
@@ -19,9 +21,9 @@ import Home from './pages/Home.vue'</script>
 }
 
 body {
-color: black;
-font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto",
-"Oxygen", "Ubuntu", "Cantarell", "Fira Sans", "Droid Sans", "Helvetica Neue",
-sans-serif;
+  color: black;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto",
+    "Oxygen", "Ubuntu", "Cantarell", "Fira Sans", "Droid Sans", "Helvetica Neue",
+    sans-serif;
 }
 </style>
