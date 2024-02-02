@@ -22,6 +22,11 @@ func (a *App) startup(ctx context.Context) {
 }
 
 // Greet returns a greeting for the given name
-func (a *App) Greet(name string) string {
-	return emailparser.ParseEmail("sample.eml")
+func (a *App) Get_Inbox() string {
+	email, err := emailparser.ParseEmail("sample.eml")
+	if err != nil {
+		return "Errpr"
+	}
+
+	return email
 }

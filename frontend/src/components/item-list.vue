@@ -9,7 +9,7 @@ const emit = defineEmits(['inFocus', 'itemSelected'])
     <div class="item-list">
         <ul class="items">
             <li class="email" v-for="item, in folder" v-on:click="emit('itemSelected', item.id)">
-                {{ item.headers }}
+                {{ item.from }}
             </li>
         </ul>
     </div>

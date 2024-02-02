@@ -1,16 +1,22 @@
 package emailparser
 
 import (
-	"bytes"
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
+	"io"
+	"log"
+	"mime"
+	"mime/multipart"
+	"net/mail"
 	"os"
-
-	"github.com/jhillyerd/enmime"
+	"strings"
 )
 
 type Email struct {
-	From        string       `json:"headers"`
+	From        string       `json:"from"`
+	Subject     string       `json:"subject"`
+	To          []string     `json:"to"`
 	Text        string       `json:"text"`
 	HTML        string       `json:"html"`
 	Attachments []Attachment `json:"attachments,omitempty"`
@@ -19,46 +25,118 @@ type Email struct {
 type Attachment struct {
 	Filename    string `json:"filename"`
 	ContentType string `json:"contentType"`
-	Content     []byte `json:"content"`
+	Content     string `json:"content"`
 }
 
-func ParseEmail(filename string) string {
-	// Read the MIME file
-	fileData, err := os.ReadFile(filename)
+func ParseEmail(filename string) (string, error) {
+	file, err := os.Open(filename)
 	if err != nil {
-		fmt.Printf("Error reading file: %v\n", err)
-		os.Exit(1)
+		return "", fmt.Errorf("error opening file: %v", err)
 	}
+	defer file.Close()
 
-	// Parse the MIME data
-	email, err := enmime.ReadEnvelope(bytes.NewReader(fileData))
+	msg, err := mail.ReadMessage(file)
 	if err != nil {
-		fmt.Printf("Error parsing MIME data: %v\n", err)
-		os.Exit(1)
+		return "", fmt.Errorf("error reading message: %v", err)
 	}
 
-	// Prepare the JSON structure
-	emailJSON := Email{
-		From: email.GetHeader("From"),
-		Text: email.Text,
-		HTML: email.HTML,
-	}
+	// Parse subject and from
+	subject := msg.Header.Get("Subject")
+	from := msg.Header.Get("From")
 
-	// Attachments
-	for _, att := range email.Attachments {
-		emailJSON.Attachments = append(emailJSON.Attachments, Attachment{
-			Filename:    att.FileName,
-			ContentType: att.ContentType,
-		})
-	}
-
-	// Convert to JSON
-	jsonEmail, err := json.MarshalIndent(emailJSON, "", "  ")
+	// Decode RFC 2047 encoded strings if necessary
+	dec := new(mime.WordDecoder)
+	subject, err = dec.DecodeHeader(subject)
 	if err != nil {
-		fmt.Printf("Error converting to JSON: %v\n", err)
-		os.Exit(1)
+		log.Printf("Failed to decode subject: %v", err)
+	}
+	from, err = dec.DecodeHeader(from)
+	if err != nil {
+		log.Printf("Failed to decode from: %v", err)
 	}
 
-	fmt.Println(string(jsonEmail))
-	return string(jsonEmail)
+	// Parse recipients
+	var to []string
+	for _, addr := range msg.Header["To"] {
+		to = append(to, addr)
+	}
+
+	email := Email{
+		From:    from,
+		Subject: subject,
+		To:      to,
+	}
+
+	mediaType, params, err := mime.ParseMediaType(msg.Header.Get("Content-Type"))
+	if err != nil {
+		return "", fmt.Errorf("error parsing media type: %v", err)
+	}
+
+	if strings.HasPrefix(mediaType, "multipart/") {
+		mr := multipart.NewReader(msg.Body, params["boundary"])
+		if err := parseParts(mr, &email); err != nil {
+			return "", err
+		}
+	} else {
+		// Handle non-multipart emails here if needed
+	}
+
+	jsonEmail, err := json.MarshalIndent(email, "", "  ")
+	if err != nil {
+		return "", fmt.Errorf("error marshalling to JSON: %v", err)
+	}
+
+	return string(jsonEmail), nil
+}
+
+func parseParts(reader *multipart.Reader, email *Email) error {
+	for {
+		part, err := reader.NextPart()
+		if err == io.EOF {
+			break
+		} else if err != nil {
+			return fmt.Errorf("error reading part: %v", err)
+		}
+
+		contentType := part.Header.Get("Content-Type")
+		contentTransferEncoding := part.Header.Get("Content-Transfer-Encoding")
+
+		body, err := io.ReadAll(part)
+		if err != nil {
+			return fmt.Errorf("error reading part body: %v", err)
+		}
+
+		switch {
+		case strings.HasPrefix(contentType, "text/plain"):
+			email.Text += string(body)
+
+		case strings.HasPrefix(contentType, "text/html"):
+			email.HTML += string(body)
+
+		case strings.Contains(contentType, "attachment") || strings.Contains(part.Header.Get("Content-Disposition"), "attachment"):
+			filename := part.FileName()
+			var content string
+			switch contentTransferEncoding {
+			case "base64":
+				content = base64.StdEncoding.EncodeToString(body)
+			default:
+				content = string(body)
+			}
+
+			email.Attachments = append(email.Attachments, Attachment{
+				Filename:    filename,
+				ContentType: contentType,
+				Content:     content,
+			})
+		}
+
+		// Check for nested multipart parts
+		// if strings.HasPrefix(contentType, "multipart/") {
+		// 	nestedMr := multipart.NewReader(bytes.NewReader(body), params["boundary"])
+		// 	if err := parseParts(nestedMr, email); err != nil {
+		// 		return err
+		// 	}
+		// }
+	}
+	return nil
 }

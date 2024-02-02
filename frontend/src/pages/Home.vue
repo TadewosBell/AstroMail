@@ -5,24 +5,27 @@ import topHeader from '../components/header.vue';
 import itemList from '../components/item-list.vue';
 import sidenav from '../components/sidenav.vue';
 import inbox from '../components/inbox.vue';
-import { Greet } from '../../wailsjs/go/main/App'
+import { Get_Inbox } from '../../wailsjs/go/main/App'
 
 const data = reactive({
-  inbox: [],
   folder: 'inbox',
+  folders: {
+    'inbox': [],
+    'sent': [],
+  }
 })
 
-function GetEmail() {
+function GetInbox() {
   console.log("Here")
-  Greet(data.name).then(result => {
-    const  resultJson =JSON.parse(result);
+  Get_Inbox().then(result => {
+    const resultJson = JSON.parse(result);
     resultJson.id = 0;
-    data.inbox.push(resultJson)
+    data.folders.inbox.push(resultJson)
   })
 }
 
 onMounted(() => {
-  GetEmail()
+  GetInbox()
 })
 
 
@@ -43,9 +46,9 @@ function ChangeFolder(folder) {
   <main class="parent">
       <sidenav-header />
       <top-header />
-      <item-list @item-selected="ItemSelected" :folder="data[data.folder]"  />
+      <item-list @item-selected="ItemSelected" :folder="data?.folders[data.folder]"  />
       <sidenav @folder-selected="ChangeFolder" />
-      <inbox :email="data[data.folder][data.focused_item]" />
+      <inbox :email="data?.folders[data.folder][data.focused_item]" />
   </main>
 </template>
 
