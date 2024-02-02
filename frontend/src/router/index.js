@@ -5,8 +5,8 @@ import Setup from '../pages/Setup.vue'
 const router = createRouter({
   history: createWebHashHistory(),
   routes: [
-    { path: '/',  name: "Home", component: Home },
-    { path: '/Setup', component: Setup }
+    { path: '/Inbox',  name: "Home", component: Home },
+    { path: '/', component: Setup }
   ],
 });
 

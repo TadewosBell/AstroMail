@@ -30,8 +30,7 @@ onMounted(() => {
 
 
 function ItemSelected(index) {
-console.log(index)
-data.focused_item = index;
+  data.focused_item = index;
 
 }
 

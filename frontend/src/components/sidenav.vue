@@ -8,6 +8,7 @@ function FolderSelected(folder) {
     <div class="sidenav">
         <ul class="items">
             <li class="folders" v-on:click="FolderSelected('inbox')" >Inbox</li>
+            <li class="folders" v-on:click="FolderSelected('sent')" >Sent</li>
         </ul>
     </div>
 </template>
