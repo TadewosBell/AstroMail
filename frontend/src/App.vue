@@ -1,8 +1,28 @@
 <script setup>
+import { defineAsyncComponent } from 'vue';
+import { ModalsContainer, useModal } from 'vue-final-modal'
+import ComposeModal from './components/compose-modal.vue'
+const { open, close } = useModal({
+  component: ComposeModal,
+  attrs: {
+    title: 'Hello World!',
+    onConfirm() {
+      close()
+    },
+  },
+})
+
+const composeEmail = () => {
+  console.log('here')
+  open();
+}
 </script>
 
 <template>
-    <router-view />
+  <div>
+    <ModalsContainer />
+    <router-view @compose-email="composeEmail" />
+  </div>
 </template>
 
 <style>

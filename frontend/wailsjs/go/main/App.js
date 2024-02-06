@@ -5,3 +5,7 @@
 export function Get_Inbox() {
   return window['go']['main']['App']['Get_Inbox']();
 }
+
+export function Launch_Smtp_Server(arg1, arg2, arg3) {
+  return window['go']['main']['App']['Launch_Smtp_Server'](arg1, arg2, arg3);
+}

@@ -42,6 +42,7 @@ function Next_Slide() {
 <style>
 .carousel {
     background-color: #f2f6f6;
+    --wails-draggable: drag;
 }
 </style>
   

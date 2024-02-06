@@ -4,8 +4,9 @@ import sidenavHeader from '../components/sidenav-header.vue';
 import topHeader from '../components/header.vue';
 import itemList from '../components/item-list.vue';
 import sidenav from '../components/sidenav.vue';
-import inbox from '../components/inbox.vue';
+import content from '../components/content.vue';
 import { Get_Inbox } from '../../wailsjs/go/main/App'
+
 
 const data = reactive({
   folder: 'inbox',
@@ -14,6 +15,8 @@ const data = reactive({
     'sent': [],
   }
 })
+
+const emit = defineEmits(['composeEmail'])
 
 function GetInbox() {
   console.log("Here")
@@ -39,15 +42,23 @@ function ChangeFolder(folder) {
   data.folder = folder;
 }
 
+function ComposeEmail() {
+  console.log("Componse");
+  emit('composeEmail')
+}
+
 </script>
 
 <template>
   <main class="parent">
       <sidenav-header />
-      <top-header />
-      <item-list @item-selected="ItemSelected" :folder="data?.folders[data.folder]"  />
+      <top-header @compose-email="ComposeEmail"
+      :title="data.folder"
+      />
+      <item-list @item-selected="ItemSelected" :folder="data?.folders[data.folder]"
+        />
       <sidenav @folder-selected="ChangeFolder" />
-      <inbox :email="data?.folders[data.folder][data.focused_item]" />
+      <content :email="data?.folders[data.folder][data.focused_item]" />
   </main>
 </template>
 

@@ -1,8 +1,10 @@
 package main
 
 import (
-	emailparser "changeme/email-parser"
+	emailparser "AstroMail/email-parser"
+	"AstroMail/storage"
 	"context"
+	"fmt"
 )
 
 // App struct
@@ -21,11 +23,17 @@ func (a *App) startup(ctx context.Context) {
 	a.ctx = ctx
 }
 
+// Launch SMTP Server
+func (a *App) Launch_Smtp_Server(domain string, aws_id string, aws_secret string) {
+	fmt.Println(domain, aws_id, aws_secret)
+	storage.SaveCredentials(domain, aws_id, aws_secret)
+}
+
 // Greet returns a greeting for the given name
 func (a *App) Get_Inbox() string {
 	email, err := emailparser.ParseEmail("sample.eml")
 	if err != nil {
-		return "Errpr"
+		return "Error"
 	}
 
 	return email
