@@ -1,13 +1,27 @@
 <script setup>
-import { defineAsyncComponent } from 'vue';
+import { onBeforeMount } from 'vue';
 import { ModalsContainer, useModal } from 'vue-final-modal'
 import ComposeModal from './components/compose-modal.vue'
+import { Send_Email, Is_Setup } from '../wailsjs/go/main/App'
+import { useRouter } from 'vue-router';
+
+const router = useRouter()
+
 const { open, close } = useModal({
   component: ComposeModal,
   attrs: {
     title: 'Hello World!',
     onConfirm() {
       close()
+    },
+    onSend(email) {
+
+      console.log(email)
+      Send_Email(email.to, email.subject,email.body).then(result => {
+    }).catch(error => {
+        console.error('Send Email failed:', error);
+        // Handle the error appropriately
+    });
     },
   },
 })
@@ -16,6 +30,20 @@ const composeEmail = () => {
   console.log('here')
   open();
 }
+
+onBeforeMount(() => {
+  Is_Setup().then(result => {
+    const status = result;
+    console.log("Status: ", status)
+    if(status){
+      router.push('/Home')
+    } else{
+      router.push('/Setup')
+    }
+  })
+})
+
+
 </script>
 
 <template>

@@ -4,7 +4,7 @@ import router from './router'; // Import the router
 import { OhVueIcon, addIcons } from "oh-vue-icons";
 import './style.css';
 import 'vue-final-modal/style.css'
-import { MdEmailRound, IoSend } from "oh-vue-icons/icons";
+import { MdEmailRound, IoSend, MdRefresh, MdNavigatenext, MdNavigatebefore, MdInbox } from "oh-vue-icons/icons";
 
 
 import { createVfm } from 'vue-final-modal'
@@ -12,7 +12,7 @@ import { createVfm } from 'vue-final-modal'
 
 const vfm = createVfm()
 
-addIcons(MdEmailRound, IoSend);
+addIcons(MdEmailRound, IoSend, MdRefresh, MdNavigatenext, MdNavigatebefore, MdInbox);
 
 const app = createApp(App)
 app.use(vfm)

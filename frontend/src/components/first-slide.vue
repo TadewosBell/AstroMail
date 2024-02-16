@@ -20,7 +20,7 @@ const OpenAws = () => {
         <div class="astro-mail-setup">
             <h1>Welcome to AstroMail Email Server Setup</h1>
             <div class="step">
-                <h3>Create an AWS Account</h3>
+                <h3>Step 1: Create an AWS Account</h3>
                 <ol>
                     <li>Sign up for AWS by visiting <button class="aws_button" @click="OpenAws">Amazon web services</button>
                     </li>

@@ -1,69 +1,148 @@
 <script setup>
-import { reactive , onMounted} from 'vue'
+import { reactive, onMounted } from 'vue'
 import sidenavHeader from '../components/sidenav-header.vue';
 import topHeader from '../components/header.vue';
 import itemList from '../components/item-list.vue';
 import sidenav from '../components/sidenav.vue';
 import content from '../components/content.vue';
-import { Get_Inbox } from '../../wailsjs/go/main/App'
+import { Get_Inbox, Get_Sent, Get_Next_Page } from '../../wailsjs/go/main/App'
+import { EventsOn } from '../../wailsjs/runtime/runtime';
 
+
+EventsOn('emailSent', () => {
+  GetSent();
+});
 
 const data = reactive({
   folder: 'inbox',
   folders: {
     'inbox': [],
     'sent': [],
-  }
+  },
+  focused_item: null,
+  currentPage: 1,
 })
 
 const emit = defineEmits(['composeEmail'])
 
 function GetInbox() {
-  console.log("Here")
+  data.folders.inbox = [];
   Get_Inbox().then(result => {
-    const resultJson = JSON.parse(result);
-    resultJson.id = 0;
-    data.folders.inbox.push(resultJson)
-  })
+    console.log(result);
+    let currentId = 0;
+    result.forEach((email) => {
+      // Check if email string is not empty before parsing
+      if (email.trim() !== "") {
+        try {
+          const emailJson = JSON.parse(email);
+          console.log(emailJson);
+          if (emailJson.from) {
+            emailJson.id = currentId++;
+            data.folders.inbox.push(emailJson);
+          }
+        } catch (e) {
+          console.error("Failed to parse email JSON:", e);
+          // Handle the error or ignore the email
+        }
+      }
+    });
+  }).catch(error => {
+    console.error("Error fetching inbox:", error);
+  });
+
+}
+
+function GetSent() {
+  let folders = {
+    inbox: data.folders.inbox,
+  }
+  Get_Sent().then(result => {
+    let sent = [];
+    let currentId = 0;
+    result.forEach((email) => {
+      const emailJson = JSON.parse(email);
+      if (typeof emailJson === "object") {
+        emailJson.id = currentId;
+        sent.push(emailJson);
+        currentId = currentId + 1;
+      }
+    });
+    // Move the assignment inside the then block
+    folders.sent = sent;
+    data.folders = {
+    ...folders,
+    }
+  }).catch(error => {
+    console.error("Error fetching sent emails:", error);
+  });
 }
 
 onMounted(() => {
   GetInbox()
+  GetSent()
 })
 
 
 function ItemSelected(index) {
   data.focused_item = index;
-
 }
 
 function ChangeFolder(folder) {
   console.log(folder);
   data.folder = folder;
+  data.focused_item = null;
 }
 
 function ComposeEmail() {
-  console.log("Componse");
   emit('composeEmail')
+}
+
+function PreviousPage(){
+
+}
+
+function NextPage() {
+  let nextPage = data.currentPage + 1;
+  Get_Next_Page(data.folder, nextPage).then(result => {
+    console.log(result)
+    if (result.length >0){
+      data.folders[data.folder] = [];
+      data.currentPage = nextPage;
+      result.forEach((email) => {
+      // Check if email string is not empty before parsing
+      if (email.trim() !== "") {
+        try {
+          const emailJson = JSON.parse(email);
+          console.log(emailJson);
+          if (emailJson.from) {
+            emailJson.id = currentId++;
+            data.folders[data.folder].push(emailJson);
+          }
+        } catch (e) {
+          console.error("Failed to parse email JSON:", e);
+          // Handle the error or ignore the email
+        }
+      }
+    });
+    }
+  }).catch(error => {
+    console.error("Error fetching sent emails:", error);
+  });
 }
 
 </script>
 
 <template>
   <main class="parent">
-      <sidenav-header />
-      <top-header @compose-email="ComposeEmail"
-      :title="data.folder"
-      />
-      <item-list @item-selected="ItemSelected" :folder="data?.folders[data.folder]"
-        />
-      <sidenav @folder-selected="ChangeFolder" />
-      <content :email="data?.folders[data.folder][data.focused_item]" />
+    <sidenav-header />
+    <top-header @previous-page="PreviousPage" @next-page="NextPage" @refresh-email="GetInbox" @compose-email="ComposeEmail" :title="data.folder" :currentPage="data.currentPage" />
+    <item-list @item-selected="ItemSelected" :folder="data?.folders[data.folder]" :folderName="data.folder" />
+    <sidenav @folder-selected="ChangeFolder" />
+    <content :email="data?.folders[data.folder][data.focused_item? data.focused_item: 0]" />
   </main>
 </template>
 
 <style scoped>
-
 .search {
   padding: 12px 16px 12px 16px;
   margin: 0 0 0 20px;
@@ -140,7 +219,7 @@ function ComposeEmail() {
   border-bottom: 2px solid rgba(5, 5, 5, 0.06);
 }
 
-.email:hover{
+.email:hover {
   background: #dfe3e3;
 }
 

@@ -5,12 +5,11 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"log"
 	"mime"
 	"mime/multipart"
 	"net/mail"
-	"os"
 	"strings"
+	"time"
 )
 
 type Email struct {
@@ -19,6 +18,7 @@ type Email struct {
 	To          []string     `json:"to"`
 	Text        string       `json:"text"`
 	HTML        string       `json:"html"`
+	Date        string       `json:"date"`
 	Attachments []Attachment `json:"attachments,omitempty"`
 }
 
@@ -28,14 +28,8 @@ type Attachment struct {
 	Content     string `json:"content"`
 }
 
-func ParseEmail(filename string) (string, error) {
-	file, err := os.Open(filename)
-	if err != nil {
-		return "", fmt.Errorf("error opening file: %v", err)
-	}
-	defer file.Close()
-
-	msg, err := mail.ReadMessage(file)
+func ParseEmail(emailStr string) (string, error) {
+	msg, err := mail.ReadMessage(strings.NewReader(emailStr))
 	if err != nil {
 		return "", fmt.Errorf("error reading message: %v", err)
 	}
@@ -43,16 +37,16 @@ func ParseEmail(filename string) (string, error) {
 	// Parse subject and from
 	subject := msg.Header.Get("Subject")
 	from := msg.Header.Get("From")
-
+	date := msg.Header.Get("Date")
 	// Decode RFC 2047 encoded strings if necessary
 	dec := new(mime.WordDecoder)
 	subject, err = dec.DecodeHeader(subject)
 	if err != nil {
-		log.Printf("Failed to decode subject: %v", err)
+		fmt.Printf("Failed to decode subject: %v\n", err)
 	}
 	from, err = dec.DecodeHeader(from)
 	if err != nil {
-		log.Printf("Failed to decode from: %v", err)
+		fmt.Printf("Failed to decode from: %v\n", err)
 	}
 
 	// Parse recipients
@@ -61,11 +55,7 @@ func ParseEmail(filename string) (string, error) {
 		to = append(to, addr)
 	}
 
-	email := Email{
-		From:    from,
-		Subject: subject,
-		To:      to,
-	}
+	var text, html string
 
 	mediaType, params, err := mime.ParseMediaType(msg.Header.Get("Content-Type"))
 	if err != nil {
@@ -74,11 +64,42 @@ func ParseEmail(filename string) (string, error) {
 
 	if strings.HasPrefix(mediaType, "multipart/") {
 		mr := multipart.NewReader(msg.Body, params["boundary"])
-		if err := parseParts(mr, &email); err != nil {
-			return "", err
+		for {
+			part, err := mr.NextPart()
+			if err != nil {
+				break
+			}
+
+			partMediaType, _, err := mime.ParseMediaType(part.Header.Get("Content-Type"))
+			if err != nil {
+				fmt.Printf("Error parsing part media type: %v\n", err)
+				continue
+			}
+
+			partBody, err := io.ReadAll(part)
+			if err != nil {
+				fmt.Printf("Error reading part body: %v\n", err)
+				continue
+			}
+
+			switch partMediaType {
+			case "text/plain":
+				text = string(partBody)
+			case "text/html":
+				html = string(partBody)
+			}
 		}
 	} else {
 		// Handle non-multipart emails here if needed
+	}
+
+	email := Email{
+		From:    from,
+		Subject: subject,
+		To:      to,
+		Text:    text,
+		HTML:    html,
+		Date:    date,
 	}
 
 	jsonEmail, err := json.MarshalIndent(email, "", "  ")
@@ -139,4 +160,37 @@ func parseParts(reader *multipart.Reader, email *Email) error {
 		// }
 	}
 	return nil
+}
+
+// CreateEMLString creates an email EML string with the given parameters.
+func CreateEMLString(sender, subject, body string, recipient, ccAddresses []string, messageId string) string {
+	var b strings.Builder
+
+	// Get current date and time in the desired format
+	now := time.Now().Format(time.RFC1123Z)
+
+	// Write headers
+	fmt.Fprintf(&b, "MIME-Version: 1.0\n")
+	fmt.Fprintf(&b, "From: %s <%s>\n", sender, sender)
+	fmt.Fprintf(&b, "Date: %s\n", now)
+	fmt.Fprintf(&b, "Message-ID: <%s@mail.gmail.com>\n", messageId)
+	fmt.Fprintf(&b, "Subject: %s\n", subject)
+	fmt.Fprintf(&b, "To: %s\n", strings.Join(recipient, ", "))
+	if len(ccAddresses) > 0 {
+		fmt.Fprintf(&b, "Cc: %s\n", strings.Join(ccAddresses, ", "))
+	}
+	fmt.Fprintf(&b, "Content-Type: multipart/alternative; boundary=\"000000000000f0dd9b06111072ad\"\n\n")
+
+	// Write body parts
+	fmt.Fprintf(&b, "--000000000000f0dd9b06111072ad\n")
+	fmt.Fprintf(&b, "Content-Type: text/plain; charset=\"UTF-8\"\n\n")
+	fmt.Fprintf(&b, "%s\n", body)
+
+	fmt.Fprintf(&b, "--000000000000f0dd9b06111072ad\n")
+	fmt.Fprintf(&b, "Content-Type: text/html; charset=\"UTF-8\"\n\n")
+	fmt.Fprintf(&b, "%s\n", body)
+
+	fmt.Fprintf(&b, "--000000000000f0dd9b06111072ad--\n")
+
+	return b.String()
 }

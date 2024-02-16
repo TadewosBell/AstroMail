@@ -8,9 +8,10 @@ function NextSlide(folder) {
 }
 
 const data = reactive({
-    Domain: 'test.com', // null,
-    AwsID: 'key', // null,
-    AwsSecret: 'secret', // null,
+    Username: 'tadewosbell',
+    Domain: 'astrocommits.com', // null,
+    AwsID: 'AKIA3A3TZCPGSWECKY7I', // null,
+    AwsSecret: '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', // null,
 })
 
 // Function to validate the domain
@@ -27,7 +28,7 @@ const Launch = () => {
     // Check if Domain, AwsID, and AwsSecret are not empty and if Domain is valid
     console.log(data.AwsID, data);
     if (data.Domain && data.AwsID && data.AwsSecret && isValidDomain(data.Domain)) {
-    Launch_Smtp_Server(data.Domain, data.AwsID, data.AwsSecret).then(result => {
+    Launch_Smtp_Server(data.Username, data.Domain, data.AwsID, data.AwsSecret).then(result => {
     }).catch(error => {
         console.error('Launch failed:', error);
         // Handle the error appropriately
@@ -50,6 +51,8 @@ const Launch = () => {
               Step 3: Launch!
             </h1>
             <p>Enter your domain, AWS ID and Secret Key and click deploy</p>
+            <input v-model="data.Username" class="setupInput" type="text" placeholder="email username" >
+            <br/>
             <input v-model="data.Domain" class="setupInput" type="text" placeholder="Domain" >
             <br/>
             <input v-model="data.AwsID" class="setupInput" type="text" placeholder="AWS ID" >

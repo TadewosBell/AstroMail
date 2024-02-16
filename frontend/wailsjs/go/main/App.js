@@ -6,6 +6,22 @@ export function Get_Inbox() {
   return window['go']['main']['App']['Get_Inbox']();
 }
 
-export function Launch_Smtp_Server(arg1, arg2, arg3) {
-  return window['go']['main']['App']['Launch_Smtp_Server'](arg1, arg2, arg3);
+export function Get_Next_Page(arg1, arg2) {
+  return window['go']['main']['App']['Get_Next_Page'](arg1, arg2);
+}
+
+export function Get_Sent() {
+  return window['go']['main']['App']['Get_Sent']();
+}
+
+export function Is_Setup() {
+  return window['go']['main']['App']['Is_Setup']();
+}
+
+export function Launch_Smtp_Server(arg1, arg2, arg3, arg4) {
+  return window['go']['main']['App']['Launch_Smtp_Server'](arg1, arg2, arg3, arg4);
+}
+
+export function Send_Email(arg1, arg2, arg3) {
+  return window['go']['main']['App']['Send_Email'](arg1, arg2, arg3);
 }

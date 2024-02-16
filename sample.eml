@@ -1,20 +1,62 @@
-Subject: test html mail
-From: sender@example.com
-To: recipient@example.com
-Content-Type: multipart/alternative; boundary=bcaec520ea5d6918e204a8cea3b4
+Return-Path: <tade213e@gmail.com>
+Received: from mail-ej1-f50.google.com (mail-ej1-f50.google.com [209.85.218.50])
+ by inbound-smtp.us-east-1.amazonaws.com with SMTP id icknr1tmb8tiiqnaapgjqr599mm1q1qi7dpu3no1
+ for tadewosbell@astrocommits.com;
+ Sun, 11 Feb 2024 00:43:27 +0000 (UTC)
+Received-SPF: pass (spfCheck: domain of _spf.google.com designates 209.85.218.50 as permitted sender) client-ip=209.85.218.50; envelope-from=tade213e@gmail.com; helo=mail-ej1-f50.google.com;
+Authentication-Results: amazonses.com;
+ spf=pass (spfCheck: domain of _spf.google.com designates 209.85.218.50 as permitted sender) client-ip=209.85.218.50; envelope-from=tade213e@gmail.com; helo=mail-ej1-f50.google.com;
+ dkim=pass header.i=@gmail.com;
+ dmarc=pass header.from=gmail.com;
+X-SES-RECEIPT: AEFBQUFBQUFBQUFGRFQ3Nkp1aXl1alRMSmFUMUh5d0J2Rkp0RnNwektiMlRQMmJUUXR3Z3pjdWRqL3NzYUw0Zi9PV2RuQmIxWWRzUElyL0JGY2szSnNJdGZJZTN4R3Y0ckliNTV3OTR3K0xaOUlxdnR5YXk5ZVAxQnh2QjF3TTE5MFNDa00vL0NENERZTm00dWRiUlBibFNiVit6bnhlK1gzaWtSZHFGdkt5VmlzWjdab3hGYzM0K0t1WUZrbUVWV1paZUZ5YlpQcE9RMU9PZ2F5QzRCdjJ0cnhSb3F5ZVZraEg0eENFU2VYM1lSTlIrMGZmT1VZdXNzMG9CaVBEekhFa2hZZVNVcUJ1aVJCSi94ZXF1MnV0a0RLOXh2d1dydUs5SHRXY3FBOFJNMHpFMWFBS2YyMHc9PQ==
+X-SES-DKIM-SIGNATURE: a=rsa-sha256; q=dns/txt; b=huJEXyZRTWHkRhvkvXeq4dYsBdyb47tCpaoRSbvcWDeb0zm6LHKbHkv7TAHyXlHEPxvGZvR0PKyq93F6hUZ0cAxCEHEjwAQh+7TcoVeB/gpOeXIoyfVW8+owcorB+N1rnJUiflj4Rzgw8lATElVUUFDqdWJhh/bV+eZoVIQHTxA=; c=relaxed/simple; s=224i4yxa5dv7c2xz3womw6peuasteono; d=amazonses.com; t=1707612207; v=1; bh=j68MGTHP5mVeJtlC0K+J+81bkqcs6zvKd8bgWCyhRYQ=; h=From:To:Cc:Bcc:Subject:Date:Message-ID:MIME-Version:Content-Type:X-SES-RECEIPT;
+Received: by mail-ej1-f50.google.com with SMTP id a640c23a62f3a-a34c5ca2537so265746166b.0
+        for <tadewosbell@astrocommits.com>; Sat, 10 Feb 2024 16:43:27 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1707612206; x=1708217006; darn=astrocommits.com;
+        h=to:subject:message-id:date:from:mime-version:from:to:cc:subject
+         :date:message-id:reply-to;
+        bh=j68MGTHP5mVeJtlC0K+J+81bkqcs6zvKd8bgWCyhRYQ=;
+        b=g9jb2Navh4+3XCL0o+s8I8pSBCKditIIfMalSeXy7HrNhlV1yK238Uc+DGs2gbYoSq
+         ksPinxU7FR4FzjHLtV2OgcyRF9BiOPOgDKTsMsx4yLZhxZr1EzUUL2WcMAFJ8vb4amRw
+         /Ogtf8OFK4LqKJqrtFHauDbbFJA8FDC2yOffQ01DpKD595hQlsgl6sK9XCtNAmYZMZH+
+         VAuaBtwQ6yjnr/qtCmQWYQrkr48Qj9m87V8jOR5hP4G18gj5xBHMG/KInDx59yu6RIic
+         4m6+Pfzw/JAeJbz3c8up9XjUWDR3gb9hxisrQykGs/4p+ynKPTkNLzFRbOreqXw2pY+p
+         R6sw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1707612206; x=1708217006;
+        h=to:subject:message-id:date:from:mime-version:x-gm-message-state
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=j68MGTHP5mVeJtlC0K+J+81bkqcs6zvKd8bgWCyhRYQ=;
+        b=slSFwdDjLRMIinXqNsBBUjlYOV/PQJOnfcWdBe7xCcb+hQ2vABP75ML2F2jh+PUmR/
+         79xqZ0sw4VQBgey5UxXiFOp/0YJxqAOQSEkzVQAvRV7SYFhhJiLz2kauyB2BhWL5pQVR
+         i2yatrWaWIG3fQR/sVhrko3G095ktGq/uYxFB8yBF9a6D4gnktqTmbWUyPquPe1zUlh8
+         hfNm9kNZmubedUmS+zZ8U+E41frQlKaUi7yfatODpGq+nu4r9aT+R03QYr2SVK1UqVre
+         30vwqTm5pudADxtLj4ply4sf/gzCwMfze8D2QF8FlyD6wEcIizqG4T/RCbmC8KLTotX6
+         wVSA==
+X-Gm-Message-State: AOJu0YzmBlkQoGDOY3bKzf0NLMDw19QMlDx4JrAV6nNeIZM0tQppXGvy
+	KvZQgsO5sbgMABri+3b82iU9piohS+OOmtfAI9BzbD5n/Y/ufDFjZAx+z+9cZQopm4ZM6e1a3y5
+	07UfQveb4eLB80dzo6kVJYDpaU2EILqNO
+X-Google-Smtp-Source: AGHT+IGvbI8mOT6uRbSwrwyztCwO5rrTJmcTCQOkfoyuiiRaPeTsxA6z5JHFwYrnH5Qs7tK4zvQ2U2PfFAVSez4/Qvk=
+X-Received: by 2002:a17:906:f216:b0:a3c:b1:adcd with SMTP id
+ gt22-20020a170906f21600b00a3c00b1adcdmr1738890ejb.46.1707612205799; Sat, 10
+ Feb 2024 16:43:25 -0800 (PST)
+MIME-Version: 1.0
+From: Tadewos Bellete <tade213e@gmail.com>
+Date: Sat, 10 Feb 2024 19:43:14 -0500
+Message-ID: <CAEQzTdS5C84si_Sd=_LAQFtvXV8Hhu24+GbuaUcset+bq9+0Fg@mail.gmail.com>
+Subject: Test again
+To: tadewosbell@astrocommits.com
+Content-Type: multipart/alternative; boundary="000000000000f0dd9b06111072ad"
 
---bcaec520ea5d6918e204a8cea3b4
-Content-Type: text/plain; charset=ISO-8859-1
+--000000000000f0dd9b06111072ad
+Content-Type: text/plain; charset="UTF-8"
 
+Testing this email setup
 
-Plain text email goes here!
-This is the fallback if email client does not support HTML
+--000000000000f0dd9b06111072ad
+Content-Type: text/html; charset="UTF-8"
 
---bcaec520ea5d6918e204a8cea3b4
-Content-Type: text/html; charset=ISO-8859-1
-Content-Transfer-Encoding: quoted-printable
+Testing this email setup
 
-<h1>This is the HTML Section!</h1>
-<p>This is what displays in most modern email clients</p>
-
---bcaec520ea5d6918e204a8cea3b4--
+--000000000000f0dd9b06111072ad--
