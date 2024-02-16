@@ -10,8 +10,8 @@ function NextSlide(folder) {
 const data = reactive({
     Username: 'tadewosbell',
     Domain: 'astrocommits.com', // null,
-    AwsID: 'AKIA3A3TZCPGSWECKY7I', // null,
-    AwsSecret: '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', // null,
+    AwsID: null,
+    AwsSecret: null,
 })
 
 // Function to validate the domain
