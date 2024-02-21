@@ -44,6 +44,7 @@ const selectItem = (id) => {
   /* background-color: blue; */
   border-right: 1px solid rgba(5, 5, 5, 0.06);
   background-color: #fff;
+  overflow: scroll;
 }
 
 .items {
@@ -56,7 +57,7 @@ const selectItem = (id) => {
 .email {
   display: flex;
   align-items: center;
-  height: 50px;
+  height: 55px;
   border-bottom: 1px solid whitesmoke;
   cursor: pointer;
   z-index: 999;

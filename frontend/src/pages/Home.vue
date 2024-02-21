@@ -5,129 +5,141 @@ import topHeader from '../components/header.vue';
 import itemList from '../components/item-list.vue';
 import sidenav from '../components/sidenav.vue';
 import content from '../components/content.vue';
-import { Get_Inbox, Get_Sent, Get_Next_Page } from '../../wailsjs/go/main/App'
+import { parseDateToJson } from "../../util/time"
+
+import { Refresh_Inbox, Get_Items } from '../../wailsjs/go/main/App'
 import { EventsOn } from '../../wailsjs/runtime/runtime';
 
 
-EventsOn('emailSent', () => {
-  GetSent();
+EventsOn('Sent', () => {
+  console.log("ALREADY SENT")
+  
 });
 
-const data = reactive({
+EventsOn('Sending', () => {
+  console.log("ALREADY SENDING")
+});
+
+EventsOn('SendFail', () => {
+  console.log("Sent failed")
+});
+
+
+let data = reactive({
   folder: 'inbox',
   folders: {
     'inbox': [],
     'sent': [],
   },
-  focused_item: null,
-  currentPage: 1,
+  focused_item: 0,
+  current_page: 1,
+  current_item: null,
 })
 
 const emit = defineEmits(['composeEmail'])
 
-function GetInbox() {
-  data.folders.inbox = [];
-  Get_Inbox().then(result => {
-    console.log(result);
-    let currentId = 0;
-    result.forEach((email) => {
-      // Check if email string is not empty before parsing
-      if (email.trim() !== "") {
-        try {
-          const emailJson = JSON.parse(email);
-          console.log(emailJson);
-          if (emailJson.from) {
-            emailJson.id = currentId++;
-            data.folders.inbox.push(emailJson);
-          }
-        } catch (e) {
-          console.error("Failed to parse email JSON:", e);
-          // Handle the error or ignore the email
-        }
-      }
-    });
-  }).catch(error => {
-    console.error("Error fetching inbox:", error);
-  });
+function sortByParsedDate(emails) {
+  emails.sort((a, b) => {
+    const dateA = a.parsedDate ? new Date(a.parsedDate.dateTime) : null;
+    const dateB = b.parsedDate ? new Date(b.parsedDate.dateTime) : null;
 
+    // Convert dates to timestamps for comparison
+    const timestampA = dateA ? dateA.getTime() : 0;
+    const timestampB = dateB ? dateB.getTime() : 0;
+
+    // Handle cases where parsedDate or parsedDate.dateTime is undefined
+    if (timestampA && timestampB) {
+      return timestampB - timestampA;
+    } else if (!timestampA && timestampB) {
+      return 1; // Put b before a if a has no parsedDate
+    } else if (timestampA && !timestampB) {
+      return -1; // Put a before b if b has no parsedDate
+    } else {
+      return 0; // Leave the order unchanged if both have no parsedDate
+    }
+  });
+  emails.forEach((item, index) => {
+    item.id = index;
+  })
 }
 
-function GetSent() {
-  let folders = {
-    inbox: data.folders.inbox,
-  }
-  Get_Sent().then(result => {
-    let sent = [];
-    let currentId = 0;
-    result.forEach((email) => {
-      const emailJson = JSON.parse(email);
-      if (typeof emailJson === "object") {
-        emailJson.id = currentId;
-        sent.push(emailJson);
-        currentId = currentId + 1;
-      }
-    });
-    // Move the assignment inside the then block
-    folders.sent = sent;
-    data.folders = {
-    ...folders,
+
+function GetItems(folder, page) {
+  let itemsList = [];
+  Get_Items(folder, page).then(result => {
+    console.log(result)
+    if (result.length > 0) {
+      data.current_page = page;
+      let currentId = 0;
+      result.forEach((email) => {
+        // Check if email string is not empty before parsing
+        if (email.trim() !== "") {
+
+          try {
+            const emailJson = JSON.parse(email);
+            emailJson['parsedDate'] = parseDateToJson(emailJson.date);
+            if (emailJson.from) {
+              emailJson.id = currentId++;
+              itemsList.push(emailJson)
+              // data.folders[folder].push(emailJson);
+            }
+          } catch (e) {
+            console.error("Failed to parse email JSON:", e);
+            // Handle the error or ignore the email
+          }
+        }
+      });
     }
+    sortByParsedDate(itemsList)
+    data.folders = {
+      ...data.folders,
+      [folder]: itemsList
+    }
+    // data.folders[folder] = sortByParsedDate(data.folders[folder]);
   }).catch(error => {
-    console.error("Error fetching sent emails:", error);
+    console.error("Error fetching items:", error);
   });
 }
 
 onMounted(() => {
-  GetInbox()
-  GetSent()
+  refreshItems();
+  ItemSelected(0);
 })
 
+function refreshItems() {
+  Refresh_Inbox().then(result => {
+    GetItems('inbox', 1);
+  }).catch(error => {
+    console.error("Error fetching items:", error);
+  });
+}
 
 function ItemSelected(index) {
+  
   data.focused_item = index;
+  const current_item = data?.folders[data.folder][index];
+  data.current_item = current_item;
 }
 
 function ChangeFolder(folder) {
-  console.log(folder);
   data.folder = folder;
-  data.focused_item = null;
+  data.focused_item = 0;
+  data.current_item = data?.folders[data.folder][0];
+  GetItems(folder, 1);
 }
 
 function ComposeEmail() {
   emit('composeEmail')
 }
 
-function PreviousPage(){
-
+function PreviousPage() {
+  let prevPage = data.current_page - 1;
+  GetItems(data.folder, prevPage);
 }
 
 function NextPage() {
-  let nextPage = data.currentPage + 1;
-  Get_Next_Page(data.folder, nextPage).then(result => {
-    console.log(result)
-    if (result.length >0){
-      data.folders[data.folder] = [];
-      data.currentPage = nextPage;
-      result.forEach((email) => {
-      // Check if email string is not empty before parsing
-      if (email.trim() !== "") {
-        try {
-          const emailJson = JSON.parse(email);
-          console.log(emailJson);
-          if (emailJson.from) {
-            emailJson.id = currentId++;
-            data.folders[data.folder].push(emailJson);
-          }
-        } catch (e) {
-          console.error("Failed to parse email JSON:", e);
-          // Handle the error or ignore the email
-        }
-      }
-    });
-    }
-  }).catch(error => {
-    console.error("Error fetching sent emails:", error);
-  });
+  let nextPage = data.current_page + 1;
+  GetItems(data.folder, nextPage);
 }
 
 </script>
@@ -135,10 +147,11 @@ function NextPage() {
 <template>
   <main class="parent">
     <sidenav-header />
-    <top-header @previous-page="PreviousPage" @next-page="NextPage" @refresh-email="GetInbox" @compose-email="ComposeEmail" :title="data.folder" :currentPage="data.currentPage" />
+    <top-header @previous-page="PreviousPage" @next-page="NextPage" @refresh-email="refreshItems"
+      @compose-email="ComposeEmail" :title="data.folder" :current_page="data.current_page" />
     <item-list @item-selected="ItemSelected" :folder="data?.folders[data.folder]" :folderName="data.folder" />
     <sidenav @folder-selected="ChangeFolder" />
-    <content :email="data?.folders[data.folder][data.focused_item? data.focused_item: 0]" />
+    <content :email="data.current_item" />
   </main>
 </template>
 

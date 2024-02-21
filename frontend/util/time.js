@@ -37,7 +37,7 @@ export function parseDateToJson(dateString) {
     // Convert milliseconds to hours
     const diffHours = diffMs / (1000 * 60 * 60);
     // Check if the date is within the last 24 hours
-    if (diffHours <= 24) {
+    if (diffHours <= 12) {
       // Format and return the time part only if it's within the last 24 hours
       // Assuming the time in the parsedDate is already in local time format
       return new Date(inputDate).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true }).toLowerCase();

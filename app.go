@@ -15,7 +15,8 @@ import (
 
 // App struct
 type App struct {
-	ctx context.Context
+	ctx     context.Context
+	sending bool
 }
 
 // NewApp creates a new App application struct
@@ -26,55 +27,69 @@ func NewApp() *App {
 // startup is called when the app starts. The context is saved
 // so we can call the runtime methods
 func (a *App) startup(ctx context.Context) {
-
+	a.sending = false
 	storage.CreateConfig()
 	a.ctx = ctx
 }
 
 // Launch SMTP Server
 func (a *App) Launch_Smtp_Server(username, domain, aws_id, aws_secret string) {
-	fmt.Println(domain, aws_id, aws_secret)
-	storage.WriteKeyToFile("Username", username, "Config.Json")
-	// storage.AddAWSProfile(aws_id, aws_secret)
-	bucket, _ := smtpstack.CreateEmailBucket(domain)
+	// fmt.Println(domain, aws_id, aws_secret)
+	// storage.WriteKeyToFile("Username", username, "Config.Json")
+	storage.AddAWSProfile(aws_id, aws_secret)
+	// bucket, _ := smtpstack.CreateEmailBucket(domain)
 
-	storage.WriteKeyToFile("Bucket", bucket, "Config.Json")
-	storage.WriteKeyToFile("Bucket Status", "Created", "Config.Json")
-	storage.WriteKeyToFile("Domain", domain, "Config.Json")
-	storage.WriteKeyToFile("Domain Status", "Verifying", "Config.Json")
-	fmt.Println("bucket created: ", bucket)
-	verificationStatus, _ := smtpstack.IsDomainVerified(domain)
-	storage.WriteKeyToFile("Domain Status", "Verified", "Config.Json")
-	fmt.Println("Verification Status: ", verificationStatus)
+	// storage.WriteKeyToFile("Bucket", bucket, "Config.Json")
+	// storage.WriteKeyToFile("Bucket Status", "Created", "Config.Json")
+	// storage.WriteKeyToFile("Domain", domain, "Config.Json")
+	// storage.WriteKeyToFile("Domain Status", "Verifying", "Config.Json")
+	// fmt.Println("bucket created: ", bucket)
+	// verificationStatus, _ := smtpstack.IsDomainVerified(domain)
+	// storage.WriteKeyToFile("Domain Status", "Verified", "Config.Json")
+	// fmt.Println("Verification Status: ", verificationStatus)
 
-	roleArn, err := smtpstack.CreateSESPolicyAndRole(domain, bucket)
-	storage.WriteKeyToFile("RoleArn", roleArn, "Config.Json")
-	fmt.Println("CreateSESPolicyAndRole failed: ", err)
+	// roleArn, err := smtpstack.CreateSESPolicyAndRole(domain, bucket)
+	// storage.WriteKeyToFile("RoleArn", roleArn, "Config.Json")
+	// fmt.Println("CreateSESPolicyAndRole failed: ", err)
 
-	err = smtpstack.ConfigureSESReceiptRules(domain, username, roleArn, bucket)
+	// err = smtpstack.ConfigureSESReceiptRules(domain, username, roleArn, bucket)
 
-	fmt.Println("Configure ses rec failed: ", err)
-	if err != nil {
-		return
-	}
-	storage.WriteKeyToFile("Status", "Working", "Config.Json")
+	// fmt.Println("Configure ses rec failed: ", err)
+	// if err != nil {
+	// 	return
+	// }
+	// storage.WriteKeyToFile("Status", "Working", "Config.Json")
 }
 
-// Launch SMTP Server
+// Send email Server
 func (a *App) Send_Email(to string, subject string, body string) {
 	username, err := storage.ReadKeyFromFile("Config.Json", "Username")
-	err = smtpstack.SendEmail(username+"@astrocommits.com", subject, body, []string{to}, []string{})
-	if err == nil {
-		runtime.EventsEmit(a.ctx, "emailSent")
-	}
-	// else return a message with an error emit
+	domain, err := storage.ReadKeyFromFile("Config.Json", "Domain")
+	fmt.Println(to, body, username+"@"+domain)
 
+	if a.sending == false {
+		a.sending = true
+		err = smtpstack.SendEmail(username+"@"+domain, subject, body, []string{to}, []string{})
+		if err != nil {
+			// Handle the error and emit an error event if needed
+			runtime.EventsEmit(a.ctx, "SendFail")
+			a.sending = false
+			return
+		}
+		runtime.EventsEmit(a.ctx, "Sent")
+		a.sending = false
+		return
+	}
+
+	runtime.EventsEmit(a.ctx, "Sending")
+	return
 }
 
 // Greet returns a greeting for the given name
-func (a *App) Get_Inbox() []string {
+func (a *App) Refresh_Inbox() {
+	fmt.Println("Refresh inbox")
 	bucket, _ := storage.ReadKeyFromFile("Config.Json", "Bucket")
-	objectNames, err := smtpstack.ReadBucketFolderContent(bucket, "email", 1)
+	objectNames, _ := smtpstack.ReadBucketFolderContent(bucket, "email", 1)
 	for _, filePath := range objectNames {
 		filepathSplit := strings.Split(filePath, "/")
 		messageId := filepathSplit[1]
@@ -94,23 +109,23 @@ func (a *App) Get_Inbox() []string {
 
 	}
 
-	emails, err := storage.RetrieveEmailsPaginated("inbox", 1, 50)
-	var inbox []string
-	for _, email := range emails {
-		emailObj, _ := emailparser.ParseEmail(email)
-		inbox = append(inbox, emailObj)
-	}
+	// emails, err := storage.RetrieveEmailsPaginated("inbox", 1, 50)
+	// var inbox []string
+	// for _, email := range emails {
+	// 	emailObj, _ := emailparser.ParseEmail(email)
+	// 	inbox = append(inbox, emailObj)
+	// }
 
-	if err != nil {
-		return inbox
-	}
+	// if err != nil {
+	// 	return inbox
+	// }
 
-	return inbox
+	// return inbox
 }
 
-func (a *App) Get_Next_Page(folder string, page int) []string {
+func (a *App) Get_Items(folder string, page int) []string {
 	fmt.Println("Page: ", page)
-	emails, err := storage.RetrieveEmailsPaginated(folder, page, 50)
+	emails, err := storage.RetrieveEmailsPaginated(folder, page, 15)
 	var items []string
 	for _, email := range emails {
 		fmt.Println(email)
@@ -143,7 +158,7 @@ func (a *App) Get_Next_Page(folder string, page int) []string {
 // }
 
 func (a *App) Get_Sent() []string {
-	emails, err := storage.RetrieveEmailsPaginated("sent", 1, 50)
+	emails, err := storage.RetrieveEmailsPaginated("sent", 1, 15)
 	var sent []string
 	for _, email := range emails {
 		emailObj, _ := emailparser.ParseEmail(email)

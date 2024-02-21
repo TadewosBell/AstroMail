@@ -2,9 +2,11 @@
 import { ref } from 'vue';
 import { VueFinalModal } from 'vue-final-modal';
 import {OhVueIcon}  from "oh-vue-icons";
+import { EventsOn } from '../../wailsjs/runtime/runtime';
 
-
-
+EventsOn('Sent', () => {
+  emit('confirm')
+});
 // No need for title as a prop since "New Message" will be static
 defineProps<{
   // You can extend this if you need to accept more props

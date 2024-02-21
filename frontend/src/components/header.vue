@@ -3,7 +3,7 @@
 import {OhVueIcon}  from "oh-vue-icons";
 const props = defineProps({
   title: String,
-  currentPage: Number,
+  current_page: Number,
 })
 
 const emit = defineEmits(['composeEmail', 'refreshEmail',  'previousPage', 'nextPage'])
@@ -14,7 +14,7 @@ const emit = defineEmits(['composeEmail', 'refreshEmail',  'previousPage', 'next
         <h2>{{ title }}</h2>  
         <button class="" v-on:click="emit('refreshEmail')"><OhVueIcon name="md-refresh" ></OhVueIcon> </button>
         <button class="" v-on:click="emit('previousPage')"><OhVueIcon name="md-navigatebefore" ></OhVueIcon> </button>
-        <div>{{ currentPage }}</div>
+        <div>{{ current_page }}</div>
         <button class="" v-on:click="emit('nextPage')"><OhVueIcon name="md-navigatenext" ></OhVueIcon> </button>
       <button class="view_code" v-on:click="emit('composeEmail')"><OhVueIcon name="md-email-round" ></OhVueIcon> </button>
     </div>
