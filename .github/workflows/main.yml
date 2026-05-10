@@ -1,0 +1,125 @@
+name: Spreadsheet to Table
+
+on:
+  push:
+    paths:
+      - '**.csv'
+      - '**.xlsx'
+  workflow_dispatch:
+
+jobs:
+  convert:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install openpyxl
+        run: pip install openpyxl --quiet
+
+      - name: Convert CSV and XLSX files to formatted TXT tables
+        run: |
+          python3 << 'EOF'
+          import csv
+          import os
+          import glob
+
+          # ── shared ────────────────────────────────────────────────────────────
+
+          def rows_to_table(rows):
+              """Convert a list-of-lists to a pipe/dash ASCII table string."""
+              if not rows:
+                  return ""
+
+              # Stringify every cell
+              rows = [[str(cell).strip() for cell in row] for row in rows]
+
+              # Pad short rows to the width of the widest row
+              max_cols = max(len(r) for r in rows)
+              rows = [r + [""] * (max_cols - len(r)) for r in rows]
+
+              col_widths = [
+                  max(len(row[i]) for row in rows)
+                  for i in range(max_cols)
+              ]
+
+              def fmt_row(row):
+                  return "| " + " | ".join(
+                      cell.ljust(col_widths[i]) for i, cell in enumerate(row)
+                  ) + " |"
+
+              def separator():
+                  return "+" + "+".join("-" * (w + 2) for w in col_widths) + "+"
+
+              lines = [separator(), fmt_row(rows[0]), separator()]
+              for row in rows[1:]:
+                  lines.append(fmt_row(row))
+              lines.append(separator())
+              return "\n".join(lines)
+
+          def write_table(txt_path, content):
+              os.makedirs(os.path.dirname(txt_path), exist_ok=True)
+              with open(txt_path, "w", encoding="utf-8") as f:
+                  f.write(content + "\n")
+
+          # ── CSV ───────────────────────────────────────────────────────────────
+
+          def convert_csv(csv_path):
+              with open(csv_path, newline="", encoding="utf-8") as f:
+                  rows = list(csv.reader(f))
+              txt_path = os.path.splitext(csv_path)[0] + ".txt"
+              write_table(txt_path, rows_to_table(rows))
+              print(f"CSV  → {txt_path}")
+
+          # ── XLSX ──────────────────────────────────────────────────────────────
+
+          def convert_xlsx(xlsx_path):
+              import openpyxl
+              wb = openpyxl.load_workbook(xlsx_path, data_only=True)
+              base_dir    = os.path.dirname(xlsx_path)
+              base_name   = os.path.splitext(os.path.basename(xlsx_path))[0]
+              changes_dir = os.path.join(base_dir, "changes") if base_dir else "changes"
+
+              for sheet_name in wb.sheetnames:
+                  ws = wb[sheet_name]
+                  rows = [[cell.value for cell in row] for row in ws.iter_rows()]
+                  # Strip completely empty rows
+                  rows = [r for r in rows if any(c is not None for c in r)]
+                  if not rows:
+                      continue
+
+                  safe_sheet = sheet_name.replace("/", "_").replace("\\", "_")
+                  txt_name   = f"{base_name}__{safe_sheet}.txt"
+                  txt_path   = os.path.join(changes_dir, txt_name)
+                  write_table(txt_path, rows_to_table(rows))
+                  print(f"XLSX → {txt_path}")
+
+          # ── main ──────────────────────────────────────────────────────────────
+
+          csv_files  = glob.glob("**/*.csv",  recursive=True)
+          xlsx_files = glob.glob("**/*.xlsx", recursive=True)
+
+          if not csv_files and not xlsx_files:
+              print("No CSV or XLSX files found.")
+
+          for path in csv_files:
+              convert_csv(path)
+
+          for path in xlsx_files:
+              convert_xlsx(path)
+          EOF
+
+      - name: Commit and push TXT files
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add "**/*.txt"
+          if git diff --cached --quiet; then
+            echo "No changes to commit."
+          else
+            git commit -m "ci: auto-generate table TXT from spreadsheets [skip ci]"
+            git push
+          fi
