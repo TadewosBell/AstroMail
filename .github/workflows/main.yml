@@ -2,6 +2,8 @@ name: Spreadsheet to Table
 
 on:
   push:
+    branches: 
+      - main
     paths:
       - '**.csv'
       - '**.xlsx'
